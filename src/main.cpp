@@ -1,5 +1,6 @@
 #include "../lib/logger.h"
-
+#include <torch/torch.h>
+#include <iostream>
 int
 main()
 {
@@ -11,5 +12,8 @@ main()
     
     auto console = Logger::getInstance()->console;
     console->info("Welcome to Dvorak!!");
+
+    torch::Tensor tensor = torch::eye(3);
+    std::cout << tensor << std::endl;
 }
 
