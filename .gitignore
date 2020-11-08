@@ -1,5 +1,7 @@
 build
+data
 *.a
 *.so
 *.dylib
 .vscode
+

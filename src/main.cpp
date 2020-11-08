@@ -1,6 +1,10 @@
 #include "../lib/logger.h"
 #include <torch/torch.h>
 #include <iostream>
+#include "serialize/PersonSerializer.h"
+
+using std::string;
+
 int
 main()
 {
@@ -15,5 +19,11 @@ main()
 
     torch::Tensor tensor = torch::eye(3);
     std::cout << tensor << std::endl;
+
+    string inpath = "../data";
+    string outputh = ".";
+    string ver = "test";
+    PersonSerializer ps(inpath, outputh, ver);
+    ps.LoadStaticPerson();
 }
 
