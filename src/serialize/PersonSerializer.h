@@ -10,6 +10,7 @@
 
 using std::vector;
 using std::string;
+using std::unordered_map;
 
 #define FRIENDS_SIZE 6
 // For use in memory

@@ -26,6 +26,11 @@ bool PersonSerializer::LoadStaticPerson()
 {
     string filename = input_dir_ + "/person.json";
     FILE * fp = fopen(filename.c_str(), "r");
+    if ( fp == nullptr)
+    {
+        printf("error!\n");
+        return false;
+    }
     
     char* buf = new char[1024 * 1024];
     while ( !feof(fp) )
@@ -52,14 +57,14 @@ bool PersonSerializer::LoadStaticPerson()
             rapidjson::Value& item = persons[ind];
             uint64_t person_id = item["id"].GetUint64();
             string person_name = item["name"].GetString();
-            // printf("%s, %lld...\n", person_name.c_str(), person_id);
+            printf("%s, %lld...\n", person_name.c_str(), person_id);
         }
 
     }
 }
 
 
-bool ConvertPerson(const s_Person_Info& person_info, s_Person& person)
-{
+// bool ConvertPerson(const s_Person_Info& person_info, s_Person& person)
+// {
     
-}
+// }

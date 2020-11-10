@@ -19,7 +19,7 @@ elseif(UNIX)
 endif(WIN32)
 
 
-add_subdirectory(lib)
+# add_subdirectory(lib)
 
 add_subdirectory(src bin)
 
