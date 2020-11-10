@@ -37,4 +37,21 @@ do {                                                \
 #define console_info(format, args...) CONSOLE_OUTPUT(Logger::info, format, ##args)
 #define console_error(format, args...) CONSOLE_OUTPUT(Logger::error, format, ##args)
 
+#define LOGFILE_OUTPUT(level, format, ...)          \
+do {                                                \
+    auto logger = Logger::getInstance()->logger;  \
+    switch (level)                                  \
+    {                                               \
+        case Logger::info:                          \
+            logger->info(format, ##__VA_ARGS__); break;\
+        case Logger::error:                         \
+            logger->error(format,  ##__VA_ARGS__); break;\
+        default:                                    \
+            break;                                  \
+    }                                               \
+} while (false)
+
+#define log_info(format, args...) LOGFILE_OUTPUT(Logger::info, format, ##args)
+#define log_error(format, args...) LOGFILE_OUTPUT(Logger::error, format, ##args)
+
 #endif

@@ -29,7 +29,7 @@ bool PersonSerializer::LoadStaticPerson()
     FILE * fp = fopen(filename.c_str(), "r");
     if ( fp == nullptr)
     {
-        console_error("Open file error!");
+        log_error("Open file error!");
         return false;
     }
     
@@ -43,10 +43,12 @@ bool PersonSerializer::LoadStaticPerson()
         doc.Parse(buf);
         if ( doc.HasParseError() )
         {
-            printf("Parse Json failed...\n");
+            // printf("Parse Json failed...\n");
+            log_error("Parse Json failed...\n");
         } else 
         {
-            printf("Paese success...\n");
+            // printf("Paese success...\n");
+            log_error("Paese success...\n");
         }
         
         rapidjson::Value& persons = doc["data"];
