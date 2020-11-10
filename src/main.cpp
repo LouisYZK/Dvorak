@@ -1,4 +1,4 @@
-#include "common/logger.h"
+#include "common/Logger.h"
 #include <torch/torch.h>
 #include <iostream>
 #include "serialize/PersonSerializer.h"
