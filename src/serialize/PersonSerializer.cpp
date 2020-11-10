@@ -1,4 +1,5 @@
 #include "PersonSerializer.h"
+#include "../common/logger.h"
 
 
 void PersonSerializer::init() { }
@@ -28,7 +29,7 @@ bool PersonSerializer::LoadStaticPerson()
     FILE * fp = fopen(filename.c_str(), "r");
     if ( fp == nullptr)
     {
-        printf("error!\n");
+        console_error("Open file error!");
         return false;
     }
     

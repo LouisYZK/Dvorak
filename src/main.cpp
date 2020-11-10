@@ -1,4 +1,4 @@
-#include "common/logger.hpp"
+#include "common/logger.h"
 #include <torch/torch.h>
 #include <iostream>
 #include "serialize/PersonSerializer.h"
@@ -27,7 +27,7 @@ main()
     
     auto console = Logger::getInstance()->console;
     console->info("Welcome to Dvorak!!");
-    log_info("nihao a!!!");
+    console_info("nihao a!!! {}\n", 123);
 
     torch::Tensor tensor = torch::eye(3);
     std::cout << tensor << std::endl;
