@@ -52,8 +52,14 @@ bool PersonSerializer::LoadStaticPerson()
             rapidjson::Value& item = persons[ind];
             uint64_t person_id = item["id"].GetUint64();
             string person_name = item["name"].GetString();
-            printf("%s, %lld...\n", person_name.c_str(), person_id);
+            // printf("%s, %lld...\n", person_name.c_str(), person_id);
         }
 
     }
+}
+
+
+bool ConvertPerson(const s_Person_Info& person_info, s_Person& person)
+{
+    
 }

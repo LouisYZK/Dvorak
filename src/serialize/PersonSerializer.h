@@ -6,6 +6,7 @@
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
 #include <vector>
+#include <unordered_map>
 
 using std::vector;
 using std::string;
@@ -50,6 +51,6 @@ class PersonSerializer : BaseSerializer
 
         vector<s_Person> vec_persons_;
         uint32_t person_size_;
-            
+        unordered_map<uint32_t, s_Person> person_map_;
 };
 #endif
