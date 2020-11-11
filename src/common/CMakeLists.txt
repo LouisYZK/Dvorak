@@ -4,5 +4,8 @@
 # endif()
 set(LIBLOGGER_SRC Logger.cpp)
 add_library(logger_static STATIC ${LIBLOGGER_SRC})
+
+# set(MEM_SRC MemBuffer.cpp)
+# add_library(membuffer STATIC ${MEM_SRC})
 # set_target_properties(logger_static PROPERTIES OUTPUT_NAME "logger")
 # target_link_libraries(logger PRIVATE)

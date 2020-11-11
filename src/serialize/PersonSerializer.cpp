@@ -34,6 +34,8 @@ bool PersonSerializer::LoadStaticPerson()
     }
     
     char* buf = new char[1024 * 1024];
+    vector<s_Person_Info> vec_person_info;
+    vector<uint16_t> vIndex;
     while ( !feof(fp) )
     {
         memset(buf, 0, 1024 * 1024 * sizeof(char));
@@ -43,26 +45,32 @@ bool PersonSerializer::LoadStaticPerson()
         doc.Parse(buf);
         if ( doc.HasParseError() )
         {
-            // printf("Parse Json failed...\n");
             log_error("Parse Json failed...\n");
         } else 
         {
-            // printf("Paese success...\n");
             log_error("Paese success...\n");
         }
         
         rapidjson::Value& persons = doc["data"];
         assert(persons.IsArray());
-        vector<s_Person_Info> vec_person_info;
-        
+
         for ( size_t ind = 0; ind < persons.Size(); ++ind)
         {
             rapidjson::Value& item = persons[ind];
-            uint64_t person_id = item["id"].GetUint64();
+            string person_id = item["id"].GetString();
             string person_name = item["name"].GetString();
-            printf("%s, %lld...\n", person_name.c_str(), person_id);
+            printf("%s, %s..\n", person_name.c_str(), person_id.c_str());
+            auto res1 = name_mb_.AddObjects(person_name.c_str(), person_name.size());
+            auto res2 = name_mb_.AddObjects(person_id.c_str(), person_id.size());
+            vIndex.push_back(res1);
+            vIndex.push_back(res2);
         }
+    }
 
+    for (auto i: vIndex)
+    {
+        // console_info("{}", name_mb_.GetObj(i));
+        printf(">>>>>>>> %s\n", name_mb_.GetObj(i));
     }
 }
 

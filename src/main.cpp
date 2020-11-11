@@ -2,6 +2,7 @@
 #include <torch/torch.h>
 #include <iostream>
 #include "serialize/PersonSerializer.h"
+#include "common/MemBuffer.h"
 
 using std::string;
 struct s_Person_Test
@@ -32,7 +33,7 @@ main()
     torch::Tensor tensor = torch::eye(3);
     std::cout << tensor << std::endl;
 
-    string inpath = "../data";
+    string inpath = "../../data";
     string outputh = ".";
     string ver = "test";
     PersonSerializer ps(inpath, outputh, ver);
@@ -57,4 +58,5 @@ main()
 
     // std::cout << sizeof(Test) << std::endl;
 }
+
 

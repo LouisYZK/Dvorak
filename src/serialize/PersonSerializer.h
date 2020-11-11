@@ -5,6 +5,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
+#include "../common/MemBuffer.h"
 #include <vector>
 #include <unordered_map>
 
@@ -34,6 +35,14 @@ struct s_Person
     }
 };
 
+// id -> index
+struct s_PersonHashNode
+{
+    uint32_t nIndex;  // pos in vector of s_Person;
+    uint32_t nKeyNameIndex; // key(id)'s pos in name_buffer_;
+    uint32_t nNextNodeIndex; // next node's index in nodelist_membuffer_;
+};
+
 
 class PersonSerializer : BaseSerializer
 {
@@ -53,5 +62,8 @@ class PersonSerializer : BaseSerializer
         vector<s_Person> vec_persons_;
         uint32_t person_size_;
         unordered_map<uint32_t, s_Person> person_map_;
+
+        MemBuffer<s_Person> person_mb_;
+        MemBuffer<char> name_mb_;     
 };
 #endif

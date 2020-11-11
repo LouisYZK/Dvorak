@@ -27,11 +27,11 @@ def generate():
     persons = []
     ids = []
     for ind in range(NUM):
-        rand_id = random.randint( 1<<32, 1<<64)
+        rand_id = random.randint( 1<<32, 1<<64 -1)
         name_len = random.randint(8, 16)
         rand_name = ''.join(random.sample(string.ascii_letters + string.digits, name_len))
         persons.append({
-            'id': rand_id,
+            'id': str(rand_id),
             'name': rand_name
         })
         ids.append(rand_id)
