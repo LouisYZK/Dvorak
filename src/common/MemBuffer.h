@@ -316,10 +316,4 @@ void MemBuffer<T>::Clear()
     m_nSecondIndex = 1;
 }
 
-// template <class T>
-// T& MemBuffer<T>::operator[] (uint32_t nIndex)
-// {
-    
-// }
-
 #endif
