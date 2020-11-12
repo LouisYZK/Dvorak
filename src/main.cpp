@@ -33,7 +33,7 @@ main()
     torch::Tensor tensor = torch::eye(3);
     std::cout << tensor << std::endl;
 
-    string inpath = "../../data";
+    string inpath = "/Users/didi/xjtu/MY/data";
     string outputh = ".";
     string ver = "test";
     PersonSerializer ps(inpath, outputh, ver);

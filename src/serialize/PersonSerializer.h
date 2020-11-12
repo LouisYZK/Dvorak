@@ -6,6 +6,7 @@
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/stringbuffer.h"
 #include "../common/MemBuffer.h"
+#include "../common/HashMap.h"
 #include <vector>
 #include <unordered_map>
 
@@ -61,9 +62,12 @@ class PersonSerializer : BaseSerializer
 
         vector<s_Person> vec_persons_;
         uint32_t person_size_;
-        unordered_map<uint32_t, s_Person> person_map_;
+        // unordered_map<uint32_t, s_Person> person_map_;
 
         MemBuffer<s_Person> person_mb_;
-        MemBuffer<char> name_mb_;     
+        MemBuffer<char> name_mb_;
+
+        HashMap<s_Person> person_map_;
+        HashMap<uint32_t> id_index_map_;     
 };
 #endif

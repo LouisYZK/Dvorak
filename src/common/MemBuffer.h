@@ -46,8 +46,23 @@ class MemBuffer
         bool LoadBufferFile(const char* fileName);
         bool DumpBufferFile(const char* fileName);
 
-        // T& operator[](uint32_t nIndex);
-        // const T& operator[](uint32_t nIndex) const;
+        T& operator[](uint32_t nIndex)
+        {
+            uint32_t firstIndex = nIndex >> SECOND_LEVEL_BIT;
+            uint32_t secondIndex = nIndex & ((1u << SECOND_LEVEL_BIT) -1);
+            return m_ppFirstBuffer[firstIndex][secondIndex];
+        }
+        const T& operator[](uint32_t nIndex) const
+        {
+            uint32_t firstIndex = nIndex >> SECOND_LEVEL_BIT;
+            uint32_t secondIndex = nIndex & ((1u << SECOND_LEVEL_BIT) -1);
+            return m_ppFirstBuffer[firstIndex][secondIndex];
+        }
+
+        uint32_t GetSize()
+        {
+            return (m_nCurFirstIndex << SECOND_LEVEL_BIT) + m_nSecondIndex - 1;
+        }
 
     public:
         uint16_t FIRST_LEVEL_BIT;
@@ -154,7 +169,7 @@ uint32_t MemBuffer<T>::AddObject(const T& obj)
                     sizeof(T) * (1 << SECOND_LEVEL_BIT));
     }
 
-    uint32_t index = ( m_nCurFirstIndex >> FIRST_LEVEL_BIT ) + m_nSecondIndex;
+    uint32_t index = ( m_nCurFirstIndex << FIRST_LEVEL_BIT ) + m_nSecondIndex;
     m_ppFirstBuffer[m_nCurFirstIndex][m_nSecondIndex] = obj;
     m_nSecondIndex++;
 
@@ -314,6 +329,37 @@ void MemBuffer<T>::Clear()
     memset(m_ppFirstBuffer, 0, sizeof(T*) * (1 << FIRST_LEVEL_BIT));
     m_nCurFirstIndex = 0;
     m_nSecondIndex = 1;
+}
+
+template <class T>
+void MemBuffer<T>::Init(const T& val, uint32_t size)
+{
+    if ( IsEmpty() )
+    {
+        if ( size < ( 1 << SECOND_LEVEL_BIT))
+        {
+            m_ppFirstBuffer[m_nCurFirstIndex]  = new T[ (1 << SECOND_LEVEL_BIT)];
+            memset(m_ppFirstBuffer[m_nCurFirstIndex] + m_nSecondIndex,
+                   val, sizeof(T) * size);
+        } else
+        {
+            uint32_t nFirstNum = ( size >> SECOND_LEVEL_BIT );
+            uint32_t nSecondNum = size - ( nFirstNum << SECOND_LEVEL_BIT);
+            for ( int i = 0; i < nFirstNum; ++i)
+            {
+                m_ppFirstBuffer[m_nCurFirstIndex]  = new T[ (1 << SECOND_LEVEL_BIT)];
+                memset(m_ppFirstBuffer[m_nCurFirstIndex] + m_nSecondIndex,
+                    val, sizeof(T) * ( 1 << SECOND_LEVEL_BIT));
+                m_nCurFirstIndex ++;
+                m_nSecondIndex = 0;
+            }
+            m_ppFirstBuffer[m_nCurFirstIndex]  = new T[ (1 << SECOND_LEVEL_BIT)];
+            memset(m_ppFirstBuffer[m_nCurFirstIndex] + m_nSecondIndex,
+                    val, sizeof(T) * nSecondNum);
+            m_nSecondIndex += nSecondNum;
+        }
+    }
+    return;
 }
 
 #endif
