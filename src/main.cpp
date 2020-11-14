@@ -3,6 +3,7 @@
 #include <iostream>
 #include "serialize/PersonSerializer.h"
 #include "common/MemBuffer.h"
+#include "common/HashMap.h"
 
 using std::string;
 struct s_Person_Test
@@ -17,6 +18,20 @@ struct Test
     char     person_name[10]; // 10 * 1 = 10 bytes
     uint64_t person_friends[5]; // 5 * 8 = 40 bytes
 };
+
+template<class T>
+void printe(T& ctn, const char* msg="")
+{
+    std::cout << std::endl;
+    std::cout << msg << std::endl;
+
+    typename T::const_iterator itr;
+    for ( itr = ctn.begin();
+            itr != ctn.end(); itr++ )
+        std::cout << *itr << "\t";
+    std::cout << std::endl;
+}
+
 int
 main()
 {
@@ -37,26 +52,20 @@ main()
     string outputh = ".";
     string ver = "test";
     PersonSerializer ps(inpath, outputh, ver);
-    ps.LoadStaticPerson();
+    auto ret = ps.Serialize();
+    console_info("Serialize person {}", ret);
 
-    // s_Person_Test st {12100, "test", {13100, 12300} };
-    // FILE * fp = fopen("person_byte", "wb");
-    // fwrite(&st, sizeof(s_Person_Test), 1, fp);
-    // fclose(fp);
+    HashMap<uint32_t> dct;
+    dct.Init(4);
+    dct.Insert("python", 111);
+    dct.Insert("js", 222);
     
-    // FILE * fpr = fopen("person_byte", "rb");
-    // s_Person_Test sr;
-    // memset(&sr, 0, sizeof(s_Person_Test));
-    // fread(&sr, sizeof(s_Person_Test), 1, fpr);
-    // std::cout << &sr << std::endl;
-    // std::cout << sr.nPersonID
-    //            << sr.PersonName << std::endl;
-    // std::cout << &sr.vPersonFriends << std::endl;
-    // for ( auto& item : sr.vPersonFriends)
-    //     std::cout << item << std::endl;
-    // fclose(fpr);
+    vector<uint32_t> res;
+    dct.Values(res);
+    printe(res, "aaa");
 
-    // std::cout << sizeof(Test) << std::endl;
+    HashMap<s_Person> hm("key_name_file", "node_file", "hashmap");
+    console_info("Person size: {}", hm.ValueSize());
 }
 
 

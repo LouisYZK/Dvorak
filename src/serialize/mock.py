@@ -34,7 +34,7 @@ def generate():
             'id': str(rand_id),
             'name': rand_name
         })
-        ids.append(rand_id)
+        ids.append(str(rand_id))
     # add friends randomly
     for per in persons:
         friends_num = random.randint(0, 6)

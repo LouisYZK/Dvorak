@@ -18,9 +18,9 @@ using std::unordered_map;
 // For use in memory
 struct s_Person_Info
 {
-    uint64_t nPersonID;
+    string nPersonID;
     string PersonName;
-    vector<uint64_t> vPersonFriends;
+    vector<string> vPersonFriends;
 };
 
 // For bytes 
@@ -53,6 +53,9 @@ class PersonSerializer : BaseSerializer
                         BaseSerializer(input_path, output_path, version)
                         { }
         bool LoadStaticPerson();
+        bool ConvertPerson(const vector<s_Person_Info>& v_person_info, vector<s_Person>& vperson);
+
+        bool Serialize();
     
     private:
         void init();
