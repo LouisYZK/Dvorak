@@ -2,6 +2,7 @@
 #include <torch/torch.h>
 #include <iostream>
 #include "serialize/PersonSerializer.h"
+#include "dataloader/PersonDataLoader.h"
 #include "common/MemBuffer.h"
 #include "common/HashMap.h"
 
@@ -66,6 +67,22 @@ main()
 
     HashMap<s_Person> hm("key_name_file", "node_file", "hashmap");
     console_info("Person size: {}", hm.ValueSize());
+
+    auto pd = data::PersonDataLoader::getInstance();
+    auto rett = pd->LoadData(".");
+    console_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
+
+
+    for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
+    {
+        s_Person_Info spi;
+        pd->GetPersonByIndex(ind, spi);
+        console_info("{} -> {} ", spi.PersonName, spi.nPersonID);
+        for ( auto& item : spi.vPersonFriends)
+        {
+            console_info(" friends -> {}", item);
+        }
+    }
 }
 
 

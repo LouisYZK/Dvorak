@@ -7,6 +7,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "../common/MemBuffer.h"
 #include "../common/HashMap.h"
+#include "struct.h"
 #include <vector>
 #include <unordered_map>
 
@@ -14,27 +15,6 @@ using std::vector;
 using std::string;
 using std::unordered_map;
 
-#define FRIENDS_SIZE 6
-// For use in memory
-struct s_Person_Info
-{
-    string nPersonID;
-    string PersonName;
-    vector<string> vPersonFriends;
-};
-
-// For bytes 
-struct s_Person
-{
-    uint32_t person_name_index;
-    uint32_t person_id_index;
-    uint32_t person_friends[FRIENDS_SIZE];
-    
-    s_Person()
-    {
-        memset(this, 0, sizeof(s_Person));
-    }
-};
 
 // id -> index
 struct s_PersonHashNode

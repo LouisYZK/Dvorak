@@ -21,7 +21,8 @@ int PersonSerializer::Load(void)
 int PersonSerializer::Dump(void)
 {
     bool ret = person_map_.DumpBufferFile("key_name_file", "node_file", "hashmap");
-    if ( ret )
+    bool ret_name = name_mb_.DumpBufferFile("name_file");
+    if ( ret && ret_name )
     {
         console_info("Dump {}, {}, {} ok!", "key_name_file", "node_file", "hashmap");
         return BaseSerializer::SUCCESS;
@@ -101,7 +102,10 @@ bool PersonSerializer::LoadStaticPerson()
     vector<s_Person> vsPerson;
     auto ret = ConvertPerson(vec_person_info, vsPerson);
     if ( !ret )
+    {   
         log_info(" Convert Failed.. ");
+        return false;
+    }
 
     for (auto i: vIndex)
     {
@@ -132,7 +136,7 @@ bool PersonSerializer::LoadStaticPerson()
     vector<string> vecs;
     id_index_map_.Keys(vecs);
     console_info(" size: {}, val {}, {}", vecs.size(), id_index_map_.hash_.GetSize(), id_index_map_.m_nSize);
-
+    return true;
 }
 
 bool PersonSerializer::ConvertPerson(
