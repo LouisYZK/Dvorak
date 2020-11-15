@@ -36,13 +36,14 @@ class HashMap
         }
         HashMap(const char* key_name_file, 
                 const char* node_file,
-                const char* map_file) :
+                const char* map_file,
+                uint32_t initSize) :
                 key_name_mb_(key_name_file), 
                 node_mb_(node_file),
                 hash_(map_file)
         {
-            m_nTableSize = hash_.GetSize();
-            m_nOffset = 24 - m_nTableSize;
+            m_nTableSize = initSize > 24 ? 24: initSize;
+            m_nOffset = 32 - m_nTableSize;
         }
 
         ~HashMap() {};
@@ -146,7 +147,6 @@ bool HashMap<VAL>::Find(const char* key, VAL& val)
                 return true;
             }
             auto nextIndex = node->nextNodeIndex;
-            console_info("debug {}", nextIndex);
 
             if ( nextIndex == -1)
             {

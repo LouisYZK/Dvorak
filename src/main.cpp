@@ -45,15 +45,15 @@ main()
     console->info("Welcome to Dvorak!!");
     console_info("nihao a!!! {}\n", 123);
 
-    torch::Tensor tensor = torch::eye(3);
-    std::cout << tensor << std::endl;
+    // torch::Tensor tensor = torch::eye(3);
+    // std::cout << tensor << std::endl;
 
-    // string inpath = "/Users/didi/xjtu/MY/data";
-    // string outputh = ".";
-    // string ver = "test";
-    // PersonSerializer ps(inpath, outputh, ver);
-    // auto ret = ps.Serialize();
-    // console_info("Serialize person {}", ret);
+    string inpath = "/Users/didi/xjtu/MY/Dvorak/data";
+    string outputh = "dd";
+    string ver = "test";
+    PersonSerializer ps(inpath, outputh, ver);
+    auto ret = ps.Serialize();
+    console_info("Serialize person {}", ret);
 
     HashMap<uint32_t> dct;
     dct.Init(4);
@@ -75,40 +75,33 @@ main()
     console_info("hash1: {}", dict.hash_[dict.Hash("test2")]);
     console_info("Find {} {} {} {} {}", ttt.id, ttt.friends[0], ttt.friends[1], ttt.friends[2], ttt.friends[3]);
 
-    HashMap<Test> dict2 {"d/key", "d/node", "d/map"};
+    HashMap<Test> dict2 {"d/key", "d/node", "d/map", 10};
     console_info("debug {} {} {}", *dict2.hash_.GetObj(1), dict2.node_mb_.GetObj(1)->nextNodeIndex, string{dict2.key_name_mb_.GetObj(1)});
-    console_info("hash: {}", dict2.hash_[dict.Hash("test2")]);
-    Test tt1; dict2.Find("test2", tt1);
+    console_info("hash: {}, {}", dict2.hash_[dict.Hash("test2")], dict.Hash("test2"));
+    const char* stest = "test2";
+    Test tt1; dict2.Find(stest, tt1);
     // console_info("Find {} {} {}", tt1.id);
 
+    const char* s = "hello";
+    string ss = "hello";
+    console_info(" {} A {} A {} -> {}", dict2.Hash(s), dict2.Hash(ss.c_str()), dict2.Hash("hello"), dict2.m_nOffset);
 
-    // auto pd = data::PersonDataLoader::getInstance();
-    // auto rett = pd->LoadData(".");
-    // log_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
-
-    // for ( int ind = 1; ind < 100; ind ++)
-    // {
-    //     console_info(">>>>>> {}", pd->hash_person_->node_mb_[ind].keyNameIndex);
-    // }
-
-    // HashMap<s_Person> hm ("key_name_file", "node_file", "hashmap");
-    // for ( int ind = 1; ind < 1000; ind ++)
-    // {
-    //     console_info(">>>>>> {}", hm.node_mb_[ind].nextNodeIndex);
-    // }
+    auto pd = data::PersonDataLoader::getInstance();
+    auto rett = pd->LoadData("dd");
+    log_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
     
-    // for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
-    // {
-    //     s_Person_Info spi;
-    //     bool res = pd->GetPersonByIndex(ind, spi);
-    //     if (!res)
-    //         continue;
-    //     console_info("{} -> {} ", spi.PersonName, spi.nPersonID);
-    //     for ( auto& item : spi.vPersonFriends)
-    //     {
-    //         console_info(" friends -> {}", item);
-    //     }
-    // }
+    for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
+    {
+        s_Person_Info spi;
+        bool res = pd->GetPersonByIndex(ind, spi);
+        if (!res)
+            continue;
+        console_info("{} -> {} ", spi.PersonName, spi.nPersonID);
+        for ( auto& item : spi.vPersonFriends)
+        {
+            console_info(" -------------- friends -> {}", item);
+        }
+    }
 }
 
 

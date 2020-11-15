@@ -20,11 +20,17 @@ int PersonSerializer::Load(void)
 }
 int PersonSerializer::Dump(void)
 {
-    bool ret = person_map_.DumpBufferFile("key_name_file", "node_file", "hashmap");
-    bool ret_name = name_mb_.DumpBufferFile("name_file");
+    string key_name_file = output_dir_ + "/key_name_file";
+    string node_file = output_dir_ +  "/node_file";
+    string hashmap = output_dir_ +  "/hashmap";
+    string namefile = output_dir_ + "/name_file";
+    bool ret = person_map_.DumpBufferFile(key_name_file.c_str(),
+            node_file.c_str(), hashmap.c_str());
+    bool ret_name = name_mb_.DumpBufferFile(namefile.c_str());
+
+    console_info("AAAAA {}, {}", ret, ret_name);
     if ( ret && ret_name )
     {
-        // console_info("Dump {}, {}, {} ok!", "key_name_file", "node_file", "hashmap");
         return BaseSerializer::SUCCESS;
     }
     else
@@ -36,15 +42,17 @@ int PersonSerializer::Dump(void)
 
 bool PersonSerializer::Serialize()
 {
-    if ( Load() && Dump() )
+    if ( Load() != BaseSerializer::SUCCESS )
     {
-        return BaseSerializer::SUCCESS;
-    }
-    else
-    {
+        console_error("Load Data Failed!");
         return BaseSerializer::FAILED;
     }
-    
+    if ( Dump() != BaseSerializer::SUCCESS )
+    {
+        console_error("Dump Failed!");
+        return BaseSerializer::FAILED;
+    }
+    return BaseSerializer::SUCCESS;    
 }
 
 bool PersonSerializer::LoadStaticPerson()
@@ -112,9 +120,9 @@ bool PersonSerializer::LoadStaticPerson()
         // printf(">>>>>>>> %s | %s | %s\n", name_mb_.GetObj(i), &name_mb_[i], id_index_map_.key_name_mb_.GetObj(i));
         string ids {name_mb_.GetObj(i)};
         uint32_t index;
-        auto ret = id_index_map_.Find(ids, index);
+        auto ret = id_index_map_.Find(ids.c_str(), index);
         s_Person sp;
-        auto rett = person_map_.Find(ids, sp);
+        auto rett = person_map_.Find(ids.c_str(), sp);
         // console_info(" {} -> {} ", ids, sp.person_name_index);
         // if ( ret )
         // {
@@ -149,7 +157,7 @@ bool PersonSerializer::ConvertPerson(
         auto nameIndex = name_mb_.AddObjects(pinfo.PersonName.c_str(), pinfo.PersonName.size());
         sPer.person_name_index = nameIndex;
         uint32_t idIndex;
-        bool bFind = id_index_map_.Find(pinfo.nPersonID, idIndex);
+        bool bFind = id_index_map_.Find(pinfo.nPersonID.c_str(), idIndex);
         if ( !bFind )
         {
             log_error(" Not Found {}", pinfo.nPersonID);
@@ -161,7 +169,7 @@ bool PersonSerializer::ConvertPerson(
         {
             uint32_t index;
             string friendID = pinfo.vPersonFriends[ind];
-            if ( !id_index_map_.Find(friendID, index))
+            if ( !id_index_map_.Find(friendID.c_str(), index))
             {
                 log_error(" Not Found {} ", friendID);
                 return false;

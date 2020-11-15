@@ -31,7 +31,7 @@ bool PersonDataLoader::LoadData(const string& dataPath)
     string node_file = dataPath + "/node_file";
     string hashmap = dataPath + "/hashmap"; 
     string name_file = dataPath + "/name_file";
-    hash_person_ = new HashMap<s_Person> { key_name_file.c_str(), node_file.c_str(), hashmap.c_str() };
+    hash_person_ = new HashMap<s_Person> { key_name_file.c_str(), node_file.c_str(), hashmap.c_str(), 10};
     name_mb_.LoadBufferFile(name_file.c_str());
     if ( hash_person_->m_nTableSize != 0 )
     {
@@ -87,7 +87,7 @@ bool PersonDataLoader::GetPersonByIndex(uint32_t index, s_Person_Info& spi)
         return false;
     }
     s_HashNode<s_Person>* node = hash_person_->node_mb_.GetObj(index);
-    if ( true )
+    if ( node->keyNameIndex != 0 )
     {
         s_Person sp = node->val;
         
@@ -96,14 +96,8 @@ bool PersonDataLoader::GetPersonByIndex(uint32_t index, s_Person_Info& spi)
         auto nameIndex = sp.person_name_index;
         spi.PersonName = string { name_mb_.GetObj(nameIndex) };
         
-        size_t ind = 0;
-       
-        while ( true )
+        for (size_t ind = 0; ind < FRIENDS_SIZE; ++ind)
         {
-            if ( ind > FRIENDS_SIZE)
-            {
-                break;
-            }
             if ( sp.person_friends[ind] == 0)
             {
                 break;
@@ -113,8 +107,8 @@ bool PersonDataLoader::GetPersonByIndex(uint32_t index, s_Person_Info& spi)
                     sp.person_friends[ind]
                 )
             });
-            ind++;
         }
+       
         return true;
     }
     return false;
