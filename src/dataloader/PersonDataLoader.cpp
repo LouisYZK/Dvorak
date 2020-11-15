@@ -3,7 +3,10 @@
 
 using namespace data;
 
-PersonDataLoader::PersonDataLoader() {}
+PersonDataLoader::PersonDataLoader() 
+{
+    hash_person_ = nullptr;
+}
 
 PersonDataLoader::~PersonDataLoader()
 {
@@ -38,6 +41,7 @@ bool PersonDataLoader::LoadData(const string& dataPath)
         console_info(" Load {} ok", name_file);
         return true;
     }
+    
     return false;
 }
 
@@ -49,7 +53,7 @@ size_t PersonDataLoader::GetPersonSize()
 bool PersonDataLoader::GetPersonByID( string& personID, s_Person_Info& spi)
 {
     s_Person sp;
-    if ( hash_person_->Find(personID, sp) )
+    if ( hash_person_->Find(personID.c_str(), sp) )
     {
         auto idIndex = sp.person_id_index;
         spi.nPersonID = string { hash_person_->key_name_mb_.GetObj(idIndex) };
@@ -78,14 +82,14 @@ bool PersonDataLoader::GetPersonByID( string& personID, s_Person_Info& spi)
 
 bool PersonDataLoader::GetPersonByIndex(uint32_t index, s_Person_Info& spi)
 {
-    if ( hash_person_ == nullptr )
+    if ( hash_person_->m_nTableSize == 0 )
     {
         return false;
     }
-    s_HashNode<s_Person> node = *(hash_person_->node_mb_.GetObj(index));
-    if ( node.keyNameIndex != 0 )
+    s_HashNode<s_Person>* node = hash_person_->node_mb_.GetObj(index);
+    if ( true )
     {
-        s_Person sp = node.val;
+        s_Person sp = node->val;
         
         auto idIndex = sp.person_id_index;
         spi.nPersonID = string { hash_person_->key_name_mb_.GetObj(idIndex) };
@@ -93,9 +97,14 @@ bool PersonDataLoader::GetPersonByIndex(uint32_t index, s_Person_Info& spi)
         spi.PersonName = string { name_mb_.GetObj(nameIndex) };
         
         size_t ind = 0;
+       
         while ( true )
         {
-            if ( sp.person_friends[ind] == 0 )
+            if ( ind > FRIENDS_SIZE)
+            {
+                break;
+            }
+            if ( sp.person_friends[ind] == 0)
             {
                 break;
             }

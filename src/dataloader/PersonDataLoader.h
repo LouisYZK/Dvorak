@@ -29,11 +29,12 @@ namespace data
             bool GetPersonByID(string& personID, s_Person_Info& spi);
 
             bool GetFriendsByIndex( uint32_t index, vector<string> vfriends);
-            bool GetFriendsByID( string& personID, vector<string> vfriends);        
+            bool GetFriendsByID( string& personID, vector<string> vfriends);  
+            HashMap<s_Person>* hash_person_;
+
             
         private:
             static PersonDataLoader * instance;
-            HashMap<s_Person>* hash_person_;
             MemBuffer<char> name_mb_;
     };
 };

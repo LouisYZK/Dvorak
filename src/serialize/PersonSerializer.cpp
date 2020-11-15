@@ -24,7 +24,7 @@ int PersonSerializer::Dump(void)
     bool ret_name = name_mb_.DumpBufferFile("name_file");
     if ( ret && ret_name )
     {
-        console_info("Dump {}, {}, {} ok!", "key_name_file", "node_file", "hashmap");
+        // console_info("Dump {}, {}, {} ok!", "key_name_file", "node_file", "hashmap");
         return BaseSerializer::SUCCESS;
     }
     else
@@ -115,7 +115,7 @@ bool PersonSerializer::LoadStaticPerson()
         auto ret = id_index_map_.Find(ids, index);
         s_Person sp;
         auto rett = person_map_.Find(ids, sp);
-        console_info(" {} -> {} ", ids, sp.person_name_index);
+        // console_info(" {} -> {} ", ids, sp.person_name_index);
         // if ( ret )
         // {
         //     printf("%s -> %d \n", ids.c_str(), index);

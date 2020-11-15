@@ -258,8 +258,10 @@ bool MemBuffer<T>::DumpBufferFile(const char * fileName)
     for (int i = 0; i <= realFirstIndex; ++i)
     {
         if ( !m_ppFirstBuffer[i] )
+        {
             break;
-        fwrite(m_ppFirstBuffer[i], (1 << SECOND_LEVEL_BIT ), 1, fp);
+        }
+        fwrite(m_ppFirstBuffer[i], ((1 << SECOND_LEVEL_BIT ) * sizeof(T)), 1, fp);
     }
     fclose(fp);
 
@@ -273,6 +275,7 @@ bool MemBuffer<T>::LoadBufferFile(const char * fileName)
     if ( fp == nullptr )
     {
         log_error("Open file error! {}", fileName);
+        fclose(fp);
         return false;
     }
 
@@ -284,11 +287,14 @@ bool MemBuffer<T>::LoadBufferFile(const char * fileName)
     if ( nIndex == 0)
     {
         log_error("Null File!");
+        fclose(fp);
         return false;
     }
 
     m_nCurFirstIndex = (nIndex >> SECOND_LEVEL_BIT);
     m_nSecondIndex  = nIndex - (m_nCurFirstIndex << SECOND_LEVEL_BIT);
+    console_info("Load cal: secomd: {}, {}, {}", m_nSecondIndex, m_nCurFirstIndex, std::string{fileName});
+
 
     uint32_t realFirtstIndex = m_nSecondIndex ? 
                 m_nCurFirstIndex : m_nCurFirstIndex - 1;
@@ -300,7 +306,7 @@ bool MemBuffer<T>::LoadBufferFile(const char * fileName)
             m_ppFirstBuffer[i] = new T[1 << SECOND_LEVEL_BIT];
             memset(m_ppFirstBuffer[i], 0, sizeof(T) * SECOND_LEVEL_BIT);
             
-            int retSize = fread(m_ppFirstBuffer[i], (1 << SECOND_LEVEL_BIT), 1, fp);
+            int retSize = fread(m_ppFirstBuffer[i], (1 << SECOND_LEVEL_BIT) * sizeof(T), 1, fp);
             if ( !retSize )
             {
                 log_error("Read Failed...");
@@ -309,6 +315,7 @@ bool MemBuffer<T>::LoadBufferFile(const char * fileName)
             }
         }
     }
+    fclose(fp);
     return true;
 }
 

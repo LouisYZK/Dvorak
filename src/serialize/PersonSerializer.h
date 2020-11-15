@@ -36,6 +36,7 @@ class PersonSerializer : BaseSerializer
         bool ConvertPerson(const vector<s_Person_Info>& v_person_info, vector<s_Person>& vperson);
 
         bool Serialize();
+        HashMap<s_Person> person_map_;
     
     private:
         void init();
@@ -50,7 +51,6 @@ class PersonSerializer : BaseSerializer
         MemBuffer<s_Person> person_mb_;
         MemBuffer<char> name_mb_;
 
-        HashMap<s_Person> person_map_;
         HashMap<uint32_t> id_index_map_;     
 };
 #endif

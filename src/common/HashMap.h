@@ -49,7 +49,7 @@ class HashMap
         void Init(uint32_t tableSize);
         void Clear();
         void Insert(const string& key, const VAL& val);
-        bool Find(const string& key, VAL& val);
+        bool Find(const char* key, VAL& val);
 
         bool Keys(vector<string>& kyes);
         void Values(vector<VAL>& vals);
@@ -122,17 +122,23 @@ void HashMap<VAL>::Insert(const string& key, const VAL& val)
 }
 
 template <class VAL>
-bool HashMap<VAL>::Find(const string& key, VAL& val)
+bool HashMap<VAL>::Find(const char* key, VAL& val)
 {
-    auto nHash = Hash(key.c_str());
-    if ( hash_[nHash] == 0  && node_mb_.GetObj(0) == nullptr)
+    auto nHash = Hash(key);
+    if ( hash_[nHash] == 0 )
     {
+        console_info(" hash is 0!! {}", nHash);
         return false;
     } else
     {
         s_HashNode<VAL>* node = node_mb_.GetObj(hash_[nHash]);
+        
         while ( true )
         {
+            if ( node->keyNameIndex == 0)
+            {
+                return false;
+            }
             auto keyName = key_name_mb_.GetObj(node->keyNameIndex);
             if ( string{keyName} == key )
             {
@@ -140,9 +146,11 @@ bool HashMap<VAL>::Find(const string& key, VAL& val)
                 return true;
             }
             auto nextIndex = node->nextNodeIndex;
+            console_info("debug {}", nextIndex);
+
             if ( nextIndex == -1)
             {
-                break;
+                return false;
             }
             node = node_mb_.GetObj(nextIndex);
         }

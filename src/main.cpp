@@ -15,9 +15,8 @@ struct s_Person_Test
 };
 struct Test
 {
-    uint64_t person_id;  // 8 bytes
-    char     person_name[10]; // 10 * 1 = 10 bytes
-    uint64_t person_friends[5]; // 5 * 8 = 40 bytes
+    uint64_t id;  // 8 bytes
+    uint64_t friends[5]; // 5 * 8 = 40 bytes
 };
 
 template<class T>
@@ -49,12 +48,12 @@ main()
     torch::Tensor tensor = torch::eye(3);
     std::cout << tensor << std::endl;
 
-    string inpath = "/Users/didi/xjtu/MY/data";
-    string outputh = ".";
-    string ver = "test";
-    PersonSerializer ps(inpath, outputh, ver);
-    auto ret = ps.Serialize();
-    console_info("Serialize person {}", ret);
+    // string inpath = "/Users/didi/xjtu/MY/data";
+    // string outputh = ".";
+    // string ver = "test";
+    // PersonSerializer ps(inpath, outputh, ver);
+    // auto ret = ps.Serialize();
+    // console_info("Serialize person {}", ret);
 
     HashMap<uint32_t> dct;
     dct.Init(4);
@@ -65,24 +64,51 @@ main()
     dct.Values(res);
     printe(res, "aaa");
 
-    HashMap<s_Person> hm("key_name_file", "node_file", "hashmap");
-    console_info("Person size: {}", hm.ValueSize());
+    HashMap<Test> dict;
+    Test t1; t1.id = 1; t1.friends[0] = 222;
+    Test t2; t2.id = 10004; t2.friends[0] = 2223; t2.friends[1] = 1111;
+    dict.Init(10);
+    dict.Insert("test1", t1);
+    dict.Insert("test2", t2);
+    dict.DumpBufferFile("d/key", "d/node", "d/map");
+    Test ttt; dict.Find("test1", ttt);
+    console_info("hash1: {}", dict.hash_[dict.Hash("test2")]);
+    console_info("Find {} {} {} {} {}", ttt.id, ttt.friends[0], ttt.friends[1], ttt.friends[2], ttt.friends[3]);
 
-    auto pd = data::PersonDataLoader::getInstance();
-    auto rett = pd->LoadData(".");
-    console_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
+    HashMap<Test> dict2 {"d/key", "d/node", "d/map"};
+    console_info("debug {} {} {}", *dict2.hash_.GetObj(1), dict2.node_mb_.GetObj(1)->nextNodeIndex, string{dict2.key_name_mb_.GetObj(1)});
+    console_info("hash: {}", dict2.hash_[dict.Hash("test2")]);
+    Test tt1; dict2.Find("test2", tt1);
+    // console_info("Find {} {} {}", tt1.id);
 
 
-    for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
-    {
-        s_Person_Info spi;
-        pd->GetPersonByIndex(ind, spi);
-        console_info("{} -> {} ", spi.PersonName, spi.nPersonID);
-        for ( auto& item : spi.vPersonFriends)
-        {
-            console_info(" friends -> {}", item);
-        }
-    }
+    // auto pd = data::PersonDataLoader::getInstance();
+    // auto rett = pd->LoadData(".");
+    // log_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
+
+    // for ( int ind = 1; ind < 100; ind ++)
+    // {
+    //     console_info(">>>>>> {}", pd->hash_person_->node_mb_[ind].keyNameIndex);
+    // }
+
+    // HashMap<s_Person> hm ("key_name_file", "node_file", "hashmap");
+    // for ( int ind = 1; ind < 1000; ind ++)
+    // {
+    //     console_info(">>>>>> {}", hm.node_mb_[ind].nextNodeIndex);
+    // }
+    
+    // for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
+    // {
+    //     s_Person_Info spi;
+    //     bool res = pd->GetPersonByIndex(ind, spi);
+    //     if (!res)
+    //         continue;
+    //     console_info("{} -> {} ", spi.PersonName, spi.nPersonID);
+    //     for ( auto& item : spi.vPersonFriends)
+    //     {
+    //         console_info(" friends -> {}", item);
+    //     }
+    // }
 }
 
 
