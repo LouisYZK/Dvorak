@@ -1,14 +1,13 @@
 # [C++造轮子] 对象序列化实现方案 (二)
+
+- [原文地址](http://zhikai.pro/post/102)
+- [本文代码地址](https://github.com/LouisYZK/Dvorak/tree/master/src/serialize)
 
-> [上文]()主要介绍了对象序列化编码的背景和C++仅使用原生二进制接口实现的思路，本篇将实现到工程落实，主要内容有：
+> [上文](http://zhikai.pro/post/97)主要介绍了对象序列化编码的背景和C++仅使用原生二进制接口实现的思路，本篇将实现到工程落实，主要内容有：
 
 - 编解码类设计-使用索引
 - 基础内存管理工具设计
 - 哈希表设计
-
-- [原文地址](http://zhikai.pro/post/97)
-- [本文代码地址](https://github.com/LouisYZK/Dvorak/tree/master/src/serialize)
-
 
 ## 基于索引的序列化设计
 
@@ -44,9 +43,9 @@ struct s_Person
 - 对于定长对象，利用反射机制（动态语言）或存储记录下类型长度，即可直接按照下标寻址
 - 对于不定长度对象，可以利用“起始位置+终止位置”两个索引配合寻址
 
-这样寻址的复杂度都是常书级，且空间利用足够节约。但对于`s_Person`的字符串来说，C++有更好的方案，“终止位置”可以由字符`\0`代替。在C系列语言的字符串设计中，基本是按照终止符的原则。这样只需记录起始位置即可，但要注意序列化时存储终止符。
+这样寻址的复杂度都是常数级，且空间利用足够节约。但对于`s_Person`的字符串来说，C++有更好的方案，“终止位置”可以由字符`\0`代替。在C系列语言的字符串设计中，基本是按照终止符的原则。这样只需记录起始位置即可，但要注意序列化时存储终止符。
 
-## Memory Buffer工具的设计
+## Memory Buffer工具设计
 上图中的一切都是在内存中的形态，无论是现行连续存储的定长结构体和字符串，还是个人维护的哈希表对象，在任何语言中我们都要使用数据结构在内存中维护。我们先讨论定长的结构体和字符串（已经理解为字符数组）。
 
 ### 设计一个知晓内存分布的容器
@@ -239,11 +238,206 @@ bool MemBuffer<T>::LoadBufferFile(const char * fileName)
     return true;
 }
 ```
-使用自主设计的`MemBuffer`类就就可以尝试将`s_Person`数组和 字符数组存储、加载和管理了。现在未解决就是哈希表了。
+使用自主设计的`MemBuffer`类就就可以尝试将`s_Person`数组和 字符数组存储、加载和管理了。现在未解决就是哈希表了。哈希表完成序列化后，整个离线加载的数据准备就完成了，届时我们可以序列化任意量的数据到二进制，在应用启动时加载，同时保持离线的定时更新。
 
 ## 哈希表设计
+哈希表的基本定义是键值对，由键寻值的时间复杂度要接近于`O(1)`。回忆一下哈希表的内存模型，本科课程一般都会介绍二维数组的邻接表和链表两种方案。链表的形式最简单直接，空间复杂度也最小，核心是链表中指向下一节点的指针，但指针是很难序列化的，因为反序列化时内存地址是难以复现的。解决的思路仍然是创建索引，用索引来模拟链表，这样每个节点就可以简单地存在数组中（同样使用上文的`MemBuffer`工具）。
 
-## 后序
+### 节点设计
+模拟传统链表实现哈希表、解决冲突的方案，需要抽象一个链表中的节点，他需要包含`<Key, Val>`和下一节点的信息。
+
+```C++
+template <class VAL>
+struct s_HashNode
+{
+    uint32_t keyNameIndex; //键名称，通常是字符串，同样采用索引，方便序列化
+    VAL val;               //值模板，保证定长，如上文s_Person
+    int nextNodeIndex;     //下一节点索引
+    int nodeIndex;         //本节点索引 （可选，似乎没什么大用处）
+};
+```
+
+下一步就要思考哈希表最重要的两个函数`Insert`和`Find`了，涉及到哈希寻址、冲突处理策略。寻址采用某种哈希函数，冲突策略可以简单地使用往后临接节点的方案。
+### 索引结构
+下图展示了一个key寻址的过程，图中的三个数组均采用MemBuffer容器，这样顺便将编解码的问题也解决了。
+
+![](https://pic.downk.cc/item/5fb1fc29b18d627113aebd3c.png)
+
+基于此，设计出哈希表的类：
+
+```C++
+template <class VAL>
+class HashMap
+{
+public:
+    // Default ctor
+    HashMap()
+    {
+        m_nTableSize = 0;
+        m_nOffset = 0;
+    };
+    HashMap(uint32_t tableSize)
+    {
+        m_nTableSize = tableSize > 24 ? 24: tableSize;
+        m_nOffset = 32 - m_nTableSize;
+        if ( hash_.IsEmpty() )
+        {
+            hash_.Init(0, (1 << m_nTableSize));
+        }
+    }
+    // 从二进制文件构造
+    HashMap(const char* key_name_file, 
+            const char* node_file,
+            const char* map_file,
+            uint32_t initSize) :
+            key_name_mb_(key_name_file), 
+            node_mb_(node_file),
+            hash_(map_file)
+    {
+        m_nTableSize = initSize > 24 ? 24: initSize;
+        m_nOffset = 32 - m_nTableSize;
+    }
+
+    ~HashMap() {};
+    void Init(uint32_t tableSize);
+    void Clear();
+    void Insert(const string& key, const VAL& val);
+    bool Find(const char* key, VAL& val);
+
+    bool Keys(vector<string>& kyes);
+    void Values(vector<VAL>& vals);
+    uint32_t ValueSize();
+
+    bool DumpBufferFile(const char* key_name_file, 
+            const char* node_file,
+            const char* map_file);
+    // Key存储数组
+    MemBuffer<char> key_name_mb_;
+    // Node节点数组
+    MemBuffer<s_HashNode<VAL>> node_mb_;
+    // 映射表数组（真正的哈希表）
+    MemBuffer<uint32_t> hash_;
+
+public:
+    uint32_t m_nTableSize;
+    uint32_t m_nOffset;
+    uint32_t m_nSize;
+    //哈希函数，这里选用SDBM，也可换做其他的
+    uint32_t Hash(const char* key) const
+    {
+        uint32_t hash = 0;
+        while (*key)
+        {
+            hash = (*key++) + (hash << 6) + (hash << 16) - hash;
+        }
+        uint32_t sdb_hash = (hash & 0x7FFFFFFF);
+        return ( sdb_hash << m_nOffset) >> m_nOffset;
+    }
+};
+```
+上述类的设计核心就是三个容器成员，基本调用的也是`MemBuffer`的方法。
+
+- `key_name_mb_`, 存储键名，一般为字符串；
+- `node_mb_`, 存储定长的node节点；
+- `hash_`, 真正将键值与node关联，`hash_[Hash(key)]`存储的值就是key->node在`node_mb_`的下标地址。
+
+接下来的核心插入与寻找算法：
+
+```C++
+template <class VAL>
+void HashMap<VAL>::Insert(const string& key, const VAL& val)
+{
+    // 将KeyName, node都先加入容器，获取相应的index.
+    auto nHash = Hash(key.c_str());
+    auto nameIndex = key_name_mb_.AddObjects(key.c_str(), key.size());
+    // 新节点的nextIndex采用-1代表尾部
+    s_HashNode<VAL> new_node {nameIndex, val, -1};
+    auto nodeIndex = node_mb_.AddObject(new_node);
+
+    if ( hash_[nHash] == 0 )
+    {
+        // 无冲突，直接将node 索引放入哈希表hash_
+        m_nSize ++;
+        hash_[nHash] = nodeIndex;
+    } else
+    {
+        // 产生冲突，将node index赋值给哈希表当前位置节点的尾部
+        auto curNodeIndex = hash_[nHash];
+        s_HashNode<VAL>* node = nullptr;
+        node = node_mb_.GetObj(curNodeIndex); 
+        // 循环找到最后一个节点
+        while ( true ) 
+        {
+            if ( node->nextNodeIndex == -1)
+            {
+                node->nextNodeIndex = nodeIndex;
+                m_nSize++;
+                break;
+            }
+            node = node_mb_.GetObj(node->nextNodeIndex);
+        }
+    }
+}
+```
+到此一个可以支持序列化、反序列化的哈希对象就设计完成了，他可以支持任意基本类型的值，字符串类型的键，支持文件中加载存储，初步符合了离线数据编译的需要。
+
+## 离线数据序列化与加载接口设计
+这一节我们给项目设计一个数据接口，就像`Tensorflow`等多种应用都支持的类似`datasets`工具一样，数据的管理和使用最好封装成接口，设计的必要性如下：
+
+- 大量数据不可能全部加载进内存，接口需要协助实现增量读取、流式处理
+- 根据数据类型设计增删改查接口，类似rest的设计
+- 一次加载全局使用，例如C++需要设计成单例模式，全局一份数据；Python无须额外设计，维护全局句柄即可
+- 线程安全管理（多线程需求）
+
+加载模块的设计如下:
+```C++
+namespace data
+{
+class PersonDataLoader
+{
+public:
+    PersonDataLoader();
+    ~PersonDataLoader();
+    // 单例对象唯一入口
+    static PersonDataLoader * getInstance();
+    // 载入内存
+    bool LoadData(const string& dataPath);
+    size_t GetPersonSize();
+
+    // 数据查询接口
+    bool GetNameByIndex( uint32_t index, string& name);
+    bool GetNameByID( string& personID, string& name);
+
+    bool GetPersonByIndex( uint32_t index, s_Person_Info& spi);
+    bool GetPersonByID(string& personID, s_Person_Info& spi);
+
+    bool GetFriendsByIndex( uint32_t index, vector<string> vfriends);
+    bool GetFriendsByID( string& personID, vector<string> vfriends);  
+private:
+    // 单例
+    static PersonDataLoader * instance;
+    HashMap<s_Person>* hash_person_;   
+    MemBuffer<char> name_mb_;
+};
+};
+```
+更完整的代码：
+
+- [离线编译类](https://github.com/LouisYZK/Dvorak/tree/master/src/serialize)
+- [单例加载](https://github.com/LouisYZK/Dvorak/tree/master/src/dataloader)
+- [测试用例](https://github.com/LouisYZK/Dvorak/blob/master/src/main.cpp)
 
 ## 总结
+- 为数据设置索引结构不但能加速使用时的查找，且能将动态对象紧凑地序列化存储。其中字符串可以按照字符数组处理，使用`\0`做间隔处理。
+- 一个知晓内存布局方式并带有`dump`和`load`功能的容器类对于对象序列化设计很重要。动态扩容和相关接口特点十分类似STL容器
+- 支持序列化的哈希表的设计同样可借助索引机制配合三个容器进行，本文提出了一种使用数组与索引模拟链表式寻址的哈希表
+- C++最好为系统设计维护一个总数据接口，负责数据的离线编译、加载、透出接口等。设计为单例模式维护全局一份数据，避免错误使用带来的内存消耗。
 
+## 预告
+目前我们的序列化方案设计已经完成，可以用于离线加载数据的系统应用中了。但还有几处待优化的地方
+
+- 数据IO方法上，直接采用一次读取和写操作不能试用大数据规模。可以适当地考虑加入零拷贝技术，如mmap
+- 数据接口类的设计并无考虑线程安全问题，如果涉及多线程的读写操作会出问题
+- 数据来源上可以再继续抽象，使其能适应来自文件、网络、数据库的各类接口
+
+下面几篇C++主题将总结数据类的多线程处理、基础读写类的改进等。
