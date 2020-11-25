@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
 add_definitions(-std=c++14)
+
+set(CMAKE_CXX_FLAG -pthread)
+
 include_directories(/usr/local/include)
 
 project(Devorak CXX)
