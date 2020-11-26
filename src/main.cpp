@@ -6,6 +6,8 @@
 #include "common/MemBuffer.h"
 #include "common/HashMap.h"
 #include "common/PthreadPool.h"
+#include <ctime>
+#include <cstdlib>
 
 using std::string;
 struct s_Person_Test
@@ -38,12 +40,16 @@ class TestTask : public ThreadTask
         }
         void Run()
         {
-            for ( int i = 1 ; i < 2; ++i)
-            {
-                s_Person_Info spi;
-                pData->GetPersonByIndex(i, spi);
-                console_info("in thread.... {} -> {}", spi.PersonName, spi.nPersonID);
-            }
+            // for ( int i = 1 ; i < 10; ++i)
+            // {
+            //     s_Person_Info spi;
+            //     pData->GetPersonByIndex(i, spi);
+            //     // auto r = rand() % 10;
+            //     // sleep(r);
+            //     console_info("in thread{}, {} -> {}", 
+            //         (long)pthread_self(), spi.PersonName, spi.nPersonID);
+            // }
+            sleep(1);
             done = true;
         }
         bool done;
@@ -137,8 +143,9 @@ main()
     //     }
     // }
     
-    pool = new PthreadPool(4);
+    pool = new PthreadPool(5);
     // TestTask tasks[5];
+    clock_t start = clock();
     TestTask* pTask = new TestTask[5];
     for ( int ind = 0; ind < 5; ++ind)
     {
@@ -160,9 +167,10 @@ main()
             break;
         }
     }
-
+    clock_t end = clock();
     delete pool;
     delete []pTask;
+    console_info("Time Consume: {}", (double)(end - start) / CLOCKS_PER_SEC);
 }
 
 
