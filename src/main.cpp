@@ -6,8 +6,10 @@
 #include "common/MemBuffer.h"
 #include "common/HashMap.h"
 #include "common/PthreadPool.h"
+#include "common/ThreadPool.h"
 #include <ctime>
 #include <cstdlib>
+#include <stdio.h>
 
 using std::string;
 struct s_Person_Test
@@ -20,41 +22,6 @@ struct Test
 {
     uint64_t id;  // 8 bytes
     uint64_t friends[5]; // 5 * 8 = 40 bytes
-};
-
-class TestTask : public ThreadTask
-{
-    public:
-        TestTask()
-        {
-            pData = nullptr;
-        }
-        ~TestTask()
-        {
-            pData = nullptr;
-        }
-        void Init()
-        {
-            pData = data::PersonDataLoader::getInstance();
-            done = false;
-        }
-        void Run()
-        {
-            // for ( int i = 1 ; i < 10; ++i)
-            // {
-            //     s_Person_Info spi;
-            //     pData->GetPersonByIndex(i, spi);
-            //     // auto r = rand() % 10;
-            //     // sleep(r);
-            //     console_info("in thread{}, {} -> {}", 
-            //         (long)pthread_self(), spi.PersonName, spi.nPersonID);
-            // }
-            sleep(1);
-            done = true;
-        }
-        bool done;
-    private:
-        data::PersonDataLoader* pData;
 };
 
 PthreadPool* pool = NULL;
@@ -70,6 +37,50 @@ void printe(T& ctn, const char* msg="")
             itr != ctn.end(); itr++ )
         std::cout << *itr << "\t";
     std::cout << std::endl;
+}
+
+void test_new_thread()
+{
+    ThreadPool pool(4);
+    std::vector< std::future<int>> results;
+    clock_t start2 = clock();
+    for (int i = 0; i < 10; ++i)
+    {
+        results.emplace_back(
+            pool.enqueue([i] (int x) {
+                console_info("hello");
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+                console_info("Cpp");
+                return i * x;
+            }, 10)
+        );
+    }
+    for (auto && res: results)
+    {
+        console_info(res.get());
+    }
+    clock_t end2 = clock();
+    console_info("Modern Pool Time Consume: {}", (double)(end2 - start2) / CLOCKS_PER_SEC);
+}
+
+const char* test_func(const char* str)
+{
+    console_info("In async task:");
+    std::string s {str};
+    sleep(1);
+    console_info(s);
+    return str;
+}
+
+void test_callback(char* s, const char* cs)
+{
+    console_info("In Callback task: last Res is {}", std::string{cs});
+    if ( s == NULL)
+    {
+        console_error("Call back pointer null!");
+        return;
+    }
+    memcpy(s, cs, 10);
 }
 
 int
@@ -88,12 +99,12 @@ main()
     // torch::Tensor tensor = torch::eye(3);
     // std::cout << tensor << std::endl;
 
-    string inpath = "/Users/didi/xjtu/MY/Dvorak/data";
-    string outputh = "dd";
-    string ver = "test";
-    PersonSerializer ps(inpath, outputh, ver);
-    auto ret = ps.Serialize();
-    console_info("Serialize person {}", ret);
+    // string inpath = "/Users/didi/xjtu/MY/Dvorak/data";
+    // string outputh = "dd";
+    // string ver = "test";
+    // PersonSerializer ps(inpath, outputh, ver);
+    // auto ret = ps.Serialize();
+    // console_info("Serialize person {}", ret);
 
     // HashMap<uint32_t> dct;
     // dct.Init(4);
@@ -126,9 +137,9 @@ main()
     // string ss = "hello";
     // console_info(" {} A {} A {} -> {}", dict2.Hash(s), dict2.Hash(ss.c_str()), dict2.Hash("hello"), dict2.m_nOffset);
 
-    auto pd = data::PersonDataLoader::getInstance();
-    auto rett = pd->LoadData("dd");
-    log_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
+    // auto pd = data::PersonDataLoader::getInstance();
+    // auto rett = pd->LoadData("dd");
+    // log_info("Person laoding ... {}, {}", rett, pd->GetPersonSize());
     
     // for ( int ind = 1; ind < pd->GetPersonSize(); ind++)
     // {
@@ -144,33 +155,37 @@ main()
     // }
     
     pool = new PthreadPool(5);
-    // TestTask tasks[5];
     clock_t start = clock();
-    TestTask* pTask = new TestTask[5];
+    // TestTask* pTask = new TestTask[5];
+    // for ( int ind = 0; ind < 5; ++ind)
+    // {
+    //     pTask[ind].Init();
+    //     pool->AddTask(&pTask[ind]);
+    // }
+    const char* proc_c = "hello!~";
+    std::vector<ThreadTask*> vTasks;
+    // vTasks.resize(10);
+    std::vector<char*> vCallRes;
+    vCallRes.resize(vTasks.size());
     for ( int ind = 0; ind < 5; ++ind)
     {
-        pTask[ind].Init();
-        pool->AddTask(&pTask[ind]);
-    }
-    while ( true )
+        char* c = new char(10);
+        ThreadTask* task = new ThreadTask((ProcessFunc)test_func, proc_c, 
+                                (CallbackFunc)test_callback, c);
+        vTasks.push_back(task);
+        vCallRes.push_back(c);
+        pool->AddTask(task);
+    } 
+    for ( int i = 0; i < vTasks.size(); ++i)
     {
-        bool all = true;
-        for ( int ind = 0; ind < 5; ++ind)
-        {
-            if ( !pTask[ind].done )
-            {
-                all = false;
-            }
-        }
-        if (all)
-        {
-            break;
-        }
+        auto pt = vTasks[i];
+        auto call_c = vCallRes[i];
+        console_info("Task Res: {}", string{ (const char*)pt->Result() });
+        console_info("Callback Res: {}", string{ (const char*)call_c});
     }
+    
     clock_t end = clock();
     delete pool;
-    delete []pTask;
     console_info("Time Consume: {}", (double)(end - start) / CLOCKS_PER_SEC);
+    
 }
-
-

@@ -7,6 +7,8 @@
 #include <vector>
 #include <pthread.h>
 #include <time.h>
+#include <future>
+#include <functional>
 #include "Logger.h"
 
 using std::list;
@@ -16,10 +18,17 @@ const static timespec ts = {0, 1};
 
 class PthreadPool;
 
+typedef const void* (*ProcessFunc)(const void *);
+typedef void (*CallbackFunc)(void*, const void*);
 class ThreadTask
 {
     private:
-        friend class PthreadPool;  
+        friend class PthreadPool;
+        ProcessFunc m_ProcessFunc;
+        CallbackFunc m_CallbackFunc;
+        const void * m_Arg;
+        const void * m_Res;
+        void* m_CallbackArg;
 
     protected:
         void* m_pData;
@@ -31,16 +40,37 @@ class ThreadTask
     
     public:
         bool m_bFinished;
-        ThreadTask()
+
+        ThreadTask(ProcessFunc process, const void* arg, 
+                   CallbackFunc callback, void* call_arg)
+            : m_ProcessFunc(process),
+              m_Arg(arg),
+              m_CallbackFunc(callback),
+              m_CallbackArg(call_arg)
         {
             initTask();
         }
+
         virtual ~ThreadTask()
         {
             initTask();
         }
 
-        virtual void Run() = 0;
+        void Run()
+        {
+            m_Res = m_ProcessFunc(m_Arg);
+            m_CallbackFunc(m_CallbackArg, m_Res);   
+        }
+        
+        const void* Result()
+        {
+            if (WaitTask() == 0)
+            {
+                return m_Res;
+            }
+            return NULL;
+        }
+
         inline void SetData(void* data)
         {
             m_pData = data;
