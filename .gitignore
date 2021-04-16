@@ -1,7 +1,7 @@
 build
-data
 *.a
 *.so
 *.dylib
 .vscode
-
+*tsv
+*png
