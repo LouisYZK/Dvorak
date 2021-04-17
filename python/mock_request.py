@@ -2,12 +2,14 @@
 mock passengers' request
 """
 # from .data_loader import *
+from itertools import product
 from os import sep
 from numpy.core.defchararray import lower
 import pandas as pd
 import numpy as np
 import random
 from datetime import datetime, time, timedelta
+from .data_loader import STOP_PAIR_MAP
 
 class Order:
     def __init__(self,
@@ -44,9 +46,25 @@ class Bus:
         self.pos_lat = pos_lat
 
         self.stop_eta = []
+        self.weight = 0
 
     def point_distance(self, stop_id):
         pass
+
+    @property
+    def total_distance(self):
+        dist = 0
+        try:
+            for ind, stop in enumerate(self.stop_list):
+                if ind == len(self.stop_list):
+                    break
+                dist += STOP_PAIR_MAP.get(
+                    (stop.id, self.stop_list[ind+1])
+                ).dist
+        except ValueError:
+            raise ValueError("No such stop pairs")
+        return dist
+            
 
 class PsgRequest:
     def __init__(self, 

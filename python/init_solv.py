@@ -4,9 +4,37 @@ from .data_loader import STOP_MAP, STOP_PAIR_MAP
 from .utils import naive_distance
 from .mock_request import Bus, Order
 
-
+PROFIT_RATIO = 100.0
 def calculate_weight(bus: Bus):
-    pass
+    """
+        Weight of Bus = P/D - Q - W
+        P: profit of whole order
+        D: total distance
+        Q: detour ratio
+        W: order waiting punishment
+    """
+    total_psg_num = sum([item.psg_num for item in bus.order_list])
+    P = total_psg_num * PROFIT_RATIO
+    D = bus.total_distance()
+    min_distance = 0
+    for ind, stop in enumerate(bus.stop_list):
+        if ind == len(bus.stop_list):
+            break
+        min_distance += STOP_PAIR_MAP.get(
+            (stop, bus.stop_list[ind+1])
+        ).dist
+    real_distance = sum([eta for eta in bus.stop_eta])
+    Q = real_distance / min_distance
+
+    waiting_time = 0
+    for order in bus.order_list:
+        on_stop = bus.stop_list.find(order.o_stop)
+        if on_stop == -1:
+            raise ValueError("Existing order but no stop on bus!")    
+        waiting_time += (bus.stop_eta[on_stop.id] - order.lower_time)
+    W = waiting_time / len(bus.order_list)
+    return P / D - Q - W
+    
 
 def update_status(bus: Bus):
     """
@@ -23,7 +51,7 @@ def update_status(bus: Bus):
         bus.stop_eta[len(bus.stop_list)] = None
 
     ## update weight
-    calculate_weight(bus)
+    bus.weight = calculate_weight(bus)
         
 
 
@@ -118,5 +146,14 @@ class BaseSolution:
         for order in self.order_list:
             if order.bus_id != 0:
                 continue
+            nearest_bus = self.bus_list[0]
+            nearest_eta = nearest_eta.to_eta(order.o_stop)
             for bus in self.bus_list:
-                pass
+                if bus.to_eta(order.o_stop) < nearest_eta:
+                    nearest_bus = bus
+                    nearest_eta = bus.to_eta(bus.o_stop)
+            if insert_order(order, bus):
+                self.order_map[order.id] = bus.id
+                order.bus_id = bus.id
+                bus.weight = calculate_weight(bus)
+                    
