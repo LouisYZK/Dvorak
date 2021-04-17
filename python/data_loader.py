@@ -17,6 +17,8 @@ class Stop:
         self.name = name
         self.pos_lng = pos_lng
         self.pos_lat = pos_lat
+        
+        self.bound_order = None
 
 class StopPair:
     def __init__(self,

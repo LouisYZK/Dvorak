@@ -43,6 +43,8 @@ class Bus:
         self.pos_lng = pos_lng
         self.pos_lat = pos_lat
 
+        self.stop_eta = []
+
     def point_distance(self, stop_id):
         pass
 
